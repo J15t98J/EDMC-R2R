@@ -5,7 +5,7 @@ import tkinter.filedialog
 from csv import DictReader
 from logging import Logger
 from tkinter import ttk
-from typing import Optional
+from typing import Optional, Dict, Any
 
 import myNotebook as nb
 from config import appname
@@ -75,11 +75,15 @@ def screen_progress() -> tk.Frame:
 
     def mark_complete(body_name: str):
         checkboxes[body_name]['label']['foreground'] = 'green'
+
+        # if all the checkboxes are checked, move to the next page
         bools = map(lambda x: x['state'].get(), checkboxes.values())
         if all(bools): prog_next()
 
     if current_r2r:
         system = current_r2r[index]
+        root.clipboard_clear()
+        root.clipboard_append(system['name'])
     
         # system page header ([<] curr/total [>] \nSystem Name)
         b_prev = ttk.Button(progress, text="<", command=prog_prev)
@@ -104,6 +108,7 @@ def screen_progress() -> tk.Frame:
             body_frame.grid(row=current_row, sticky="W")
 
             state = tk.BooleanVar()
+            state.trace_add("write", lambda x=body: mark_complete(x))
             ttk.Checkbutton(body_frame, variable=state, command=lambda x=body: mark_complete(x)).pack(side="left")
             label = ttk.Label(body_frame, text=body)
             label.pack(side="left")
@@ -168,3 +173,15 @@ def plugin_app(parent: tk.Frame) -> tk.Frame:
     ttk.Label(root, text="Road 2 Riches", anchor=tk.CENTER,).grid(sticky=tk.E+tk.W)
     goto_screen(screen_init())
     return root
+
+
+def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry: Dict[str, Any],
+                  state: Dict[str, Any]) -> None:
+    if entry['event'] == 'SAAScanComplete':
+        log.info(entry)
+        if current_r2r:
+            current_target_system = current_r2r[index]['name']
+            for (k, v) in checkboxes.items():
+                log.info(f"lookingfor: {current_target_system} {k}")
+                if entry['BodyName'] == f"{current_target_system} {k}":
+                    v['state'].set(True)
