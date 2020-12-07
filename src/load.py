@@ -16,6 +16,8 @@ from theme import theme
 
 LOG_LEVEL = logging.INFO
 
+# TODO: FSDJump & SAAScanComplete
+
 
 def setup_logging() -> Logger:
     logger = logging.getLogger(f'{appname}.{plugin_name}')
@@ -35,9 +37,9 @@ def setup_logging() -> Logger:
 
 plugin_name: str = os.path.basename(os.path.dirname(__file__))
 log = setup_logging()
-root: tk.Frame
 current_r2r: list = []
 index: int = 0
+root: tk.Frame
 current_window: tk.Frame = None
 
 
@@ -45,20 +47,22 @@ def goto_screen(screen: tk.Frame):
     global current_window
     if current_window is not None:
         current_window.destroy()
-    screen.grid()
+    screen.grid(sticky=tk.E+tk.W)
     theme.update(screen)
     current_window = screen
 
 
 def screen_init() -> tk.Frame:
     init = ttk.Frame(root)
-    ttk.Button(init, text="Load R2R file", command=load_csv).grid(sticky="NESW")
+    init.grid_columnconfigure(0, weight=1)
+    ttk.Button(init, text="Load R2R file", command=load_csv).grid(sticky=tk.E+tk.W)
     return init
 
 
 def screen_progress() -> tk.Frame:
     global index
     progress = ttk.Frame(root)
+    progress.grid_columnconfigure(1, weight=1)
 
     # functions for prev/next buttons
     def prog_prev():
@@ -98,7 +102,7 @@ def screen_progress() -> tk.Frame:
             ttk.Checkbutton(body_frame).pack(side="left")
             ttk.Label(body_frame, text=body).pack(side="left")
             current_row = current_row + 1
-    
+
     return progress
 
 
@@ -151,5 +155,8 @@ def prefs_changed(cmdr: str, is_beta: bool) -> None:
 def plugin_app(parent: tk.Frame) -> tk.Frame:
     global root
     root = ttk.Frame(parent)
+    root.grid_columnconfigure(0, weight=1)
+
+    ttk.Label(root, text="Road 2 Riches", anchor=tk.CENTER,).grid(sticky=tk.E+tk.W)
     goto_screen(screen_init())
     return root
