@@ -1,18 +1,15 @@
 import logging
 import os
+import tkinter as tk
+import tkinter.filedialog
 from csv import DictReader
 from logging import Logger
+from tkinter import ttk
 from typing import Optional
 
 import myNotebook as nb
-
-import tkinter as tk
-import tkinter.filedialog
-from tkinter import ttk
-
 from config import appname
 from theme import theme
-
 
 LOG_LEVEL = logging.INFO
 
@@ -41,6 +38,7 @@ current_r2r: list = []
 index: int = 0
 root: tk.Frame
 current_window: tk.Frame = None
+checkboxes = {}
 
 
 def goto_screen(screen: tk.Frame):
@@ -74,7 +72,12 @@ def screen_progress() -> tk.Frame:
         global index
         index += 1
         goto_screen(screen_progress())
-    
+
+    def mark_complete(body_name: str):
+        checkboxes[body_name]['label']['foreground'] = 'green'
+        bools = map(lambda x: x['state'].get(), checkboxes.values())
+        if all(bools): prog_next()
+
     if current_r2r:
         system = current_r2r[index]
     
@@ -99,8 +102,13 @@ def screen_progress() -> tk.Frame:
         for body in system["bodies"]:
             body_frame = ttk.Frame(bodies_container)
             body_frame.grid(row=current_row, sticky="W")
-            ttk.Checkbutton(body_frame).pack(side="left")
-            ttk.Label(body_frame, text=body).pack(side="left")
+
+            state = tk.BooleanVar()
+            ttk.Checkbutton(body_frame, variable=state, command=lambda x=body: mark_complete(x)).pack(side="left")
+            label = ttk.Label(body_frame, text=body)
+            label.pack(side="left")
+
+            checkboxes[body] = {'state': state, 'label': label}
             current_row = current_row + 1
 
     return progress
