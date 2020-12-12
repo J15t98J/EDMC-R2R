@@ -10,10 +10,9 @@ from typing import Optional, Dict, Any
 import myNotebook as nb
 from config import appname
 from theme import theme
+import timeout_session
 
 LOG_LEVEL = logging.INFO
-
-# TODO: FSDJump & SAAScanComplete
 
 
 def setup_logging() -> Logger:
@@ -30,7 +29,7 @@ def setup_logging() -> Logger:
         logger.addHandler(logger_channel)
         
     return logger
-
+    
 
 plugin_name: str = os.path.basename(os.path.dirname(__file__))
 log = setup_logging()
@@ -68,15 +67,15 @@ def screen_progress() -> tk.Frame:
         global index
         index -= 1
         goto_screen(screen_progress())
-
+    
     def prog_next():
         global index
         index += 1
         goto_screen(screen_progress())
-
+    
     def mark_complete(body_name: str):
         checkboxes[body_name]['label']['foreground'] = 'green'
-
+        
         # if all the checkboxes are checked, move to the next page
         bools = map(lambda x: x['state'].get(), checkboxes.values())
         if all(bools): prog_next()
@@ -85,6 +84,14 @@ def screen_progress() -> tk.Frame:
         system = current_r2r[index]
         root.clipboard_clear()
         root.clipboard_append(system['name'])
+
+        r = timeout_session.new_session().get("https://www.edsm.net/api-system-v1/bodies",
+                                              params={'systemName': system['name']})
+        edsm_data = r.json()["bodies"]
+        body_types = {}
+        if edsm_data:
+            for edsm_body in edsm_data:
+                body_types[edsm_body["name"]] = edsm_body["subType"].lower()
     
         # system page header ([<] curr/total [>] \nSystem Name)
         b_prev = ttk.Button(progress, text="<", command=prog_prev)
@@ -105,13 +112,20 @@ def screen_progress() -> tk.Frame:
         bodies_container.grid(row=2, columnspan=3)
         current_row = 0
         for body in system["bodies"]:
+            fullname = f"{system['name']} {body}"
+            
             body_frame = ttk.Frame(bodies_container)
             body_frame.grid(row=current_row, sticky="W")
+
+            if fullname in body_types:
+                labeltext = f"{body} ({body_types[fullname]})"
+            else:
+                labeltext = body
 
             state = tk.BooleanVar()
             state.trace_add("write", lambda *unused, x=body: mark_complete(x))
             ttk.Checkbutton(body_frame, variable=state, command=lambda x=body: mark_complete(x)).pack(side="left")
-            label = ttk.Label(body_frame, text=body)
+            label = ttk.Label(body_frame, text=labeltext)
             label.pack(side="left")
 
             checkboxes[body] = {'state': state, 'label': label}
