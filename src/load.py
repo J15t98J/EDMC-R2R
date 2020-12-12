@@ -58,9 +58,10 @@ def screen_init() -> tk.Frame:
 
 
 def screen_progress() -> tk.Frame:
-    global index
+    global index, checkboxes
     progress = ttk.Frame(root)
     progress.grid_columnconfigure(1, weight=1)
+    checkboxes = {}
 
     # functions for prev/next buttons
     def prog_prev():
@@ -108,7 +109,7 @@ def screen_progress() -> tk.Frame:
             body_frame.grid(row=current_row, sticky="W")
 
             state = tk.BooleanVar()
-            state.trace_add("write", lambda x=body: mark_complete(x))
+            state.trace_add("write", lambda *unused, x=body: mark_complete(x))
             ttk.Checkbutton(body_frame, variable=state, command=lambda x=body: mark_complete(x)).pack(side="left")
             label = ttk.Label(body_frame, text=body)
             label.pack(side="left")
@@ -185,3 +186,4 @@ def journal_entry(cmdr: str, is_beta: bool, system: str, station: str, entry: Di
                 log.info(f"lookingfor: {current_target_system} {k}")
                 if entry['BodyName'] == f"{current_target_system} {k}":
                     v['state'].set(True)
+                    break
