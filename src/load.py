@@ -44,7 +44,7 @@ def goto_screen(screen: Frame):
     global current_window
     if current_window is not None:
         current_window.destroy()
-    screen.grid(sticky=E+W)
+    screen.grid(sticky=EW)
     theme.update(screen)
     current_window = screen
 
@@ -52,7 +52,7 @@ def goto_screen(screen: Frame):
 def screen_init() -> Frame:
     init = Frame(root)
     init.grid_columnconfigure(0, weight=1)
-    Button(init, text="Load R2R file", command=load_csv).grid(sticky=E+W)
+    Button(init, text="Load R2R file", command=load_csv).grid(sticky=EW)
     return init
 
 
@@ -186,7 +186,7 @@ def plugin_app(parent: Frame) -> Frame:
     root = Frame(parent)
     root.grid_columnconfigure(0, weight=1)
 
-    Label(root, text="Road 2 Riches", anchor=CENTER).grid(sticky=E+W)
+    Label(root, text="Road 2 Riches", anchor=CENTER).grid(sticky=EW)
     goto_screen(screen_init())
     return root
 
